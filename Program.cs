@@ -10,44 +10,54 @@ var currentTime = Observable.Create<string>(
         return Disposable.Empty;
     });
 
-var backgroundImage = Observable.Create<Bitmap>(
-        observer =>
-        {
-            var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-            var stream = assets!.Open(new Uri("avares://AvaloniaClock/Assets/bg.png"));
-            var bitmap = Bitmap.DecodeToWidth(stream, 800);
-            observer.OnNext(bitmap);
-            return Disposable.Empty;
-        }
-    );
+var windowIcon = Observable.Create<WindowIcon>(
+    observer =>
+    {
+        var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
+        var stream = assets!.Open(new Uri("avares://AvaloniaClock/Assets/icon.ico"));
+        var windowIcon = new WindowIcon(stream);
+        
+        observer.OnNext(windowIcon);
+        return Disposable.Empty;
+    }
+);
 
+var background = Observable.Create<IImageBrush>(
+    observer =>
+    {
+        var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
+        var stream = assets!.Open(new Uri("avares://AvaloniaClock/Assets/bg.png"));
+        var bitmap = Bitmap.DecodeToWidth(stream, 800);
+        var imageBrush = new ImageBrush(bitmap);
+        imageBrush.Stretch = Stretch.Fill;
+
+        observer.OnNext(imageBrush);
+        return Disposable.Empty;
+    }
+);
 Window Build() =>
     Window()
         .Width(400).Height(200).CanResize(false)
         .WindowStartupLocation(WindowStartupLocation.CenterScreen)
+        .Icon(windowIcon)
+        .Background(background)
         .Content(
                 Grid()
                 .Children(
-                    Image()
-                        .ZIndex(0)
-                        .Source(backgroundImage)
-                        .Width(400).Height(400)
-                        .Stretch(Stretch.Fill),
                     Border()
                         .Margin(25, 0, 25, 0)
                         .Height(100)
                         .CornerRadius(10)
                         .BoxShadow(BoxShadows.Parse("5 5 10 2 Black"))
-                        .Background(Brushes.White)
+                        .Background(Brushes.White).Opacity(0.5)
                         .Child(
                             TextBlock()
                             .Foreground(Brushes.Black)
                             .TextAlignmentCenter()
-                            .ZIndex(1)
                             .FontSize(40)
                             .FontStretch(FontStretch.Expanded)
                             .VerticalAlignment(VerticalAlignment.Center)
-                            .Text(currentTime)
+                            .Text(currentTime).Opacity(50)
                         )
                 )
         );
